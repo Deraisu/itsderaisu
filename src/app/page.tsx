@@ -1,102 +1,145 @@
-'use client';
+"use client";
+import { useState } from "react";
 
-import React, { useState } from 'react';
+export default function Home() {
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
-export default function Page() {
-    const [question, setQuestion] = useState('');
+  const sendQuestion = async () => {
+    if (!question.trim()) return;
+    setLoading(true);
+    setAnswer("");
+    setShowAnswer(false);
 
-    const handleSubmit = () => {
-        if (question.trim() === '') {
-            alert('Silakan masukkan pertanyaan Anda');
-            return;
-        }
-        // Here you can add AJAX call or whatever processing you need
-        console.log('Pertanyaan yang dikirim:', question);
-        setQuestion('');
-    };
+    try {
+      const res = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      const data = await res.json();
 
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSubmit();
-        }
-    };
+      setAnswer(data.answer || "Sedang di proses.");
+      setTimeout(() => setShowAnswer(true), 50);
+    } catch {
+      setAnswer("Terjadi kesalahan.");
+      setShowAnswer(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div style={{
-            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            backgroundColor: '#e5f5e0',
-            minHeight: '100vh',
-            margin: 0,
-            padding: 20,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }}>
-            <div style={{
-                backgroundColor: 'white',
-                padding: 30,
-                borderRadius: 12,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                width: '100%',
-                maxWidth: 600
-            }}>
-                <h1 style={{
-                    color: '#2e7d32',
-                    textAlign: 'center',
-                    marginBottom: 20,
-                    fontSize: 24
-                }}>
-                    Silakan Ajukan Pertanyaan Anda
-                </h1>
-                <div style={{
-                    display: 'flex',
-                    marginBottom: 20
-                }}>
-                    <input
-                        type="text"
-                        value={question}
-                        onChange={e => setQuestion(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Ketik pertanyaan Anda di sini..."
-                        style={{
-                            flex: 1,
-                            padding: '12px 16px',
-                            border: '1px solid #ddd',
-                            borderRadius: '6px 0 0 6px',
-                            fontSize: 16,
-                            color: '#333',
-                            backgroundColor: '#f8f9fa',
-                            transition: 'all 0.3s ease'
-                        }}
-                    />
-                    <button
-                        onClick={handleSubmit}
-                        style={{
-                            padding: '12px 20px',
-                            backgroundColor: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '0 6px 6px 0',
-                            cursor: 'pointer',
-                            fontSize: 16,
-                            transition: 'all 0.3s ease'
-                        }}
-                        onMouseOver={e => (e.currentTarget.style.backgroundColor = '#3e8e41')}
-                        onMouseOut={e => (e.currentTarget.style.backgroundColor = '#4caf50')}
-                    >
-                        Kirim
-                    </button>
-                </div>
-                <div style={{
-                    textAlign: 'center',
-                    color: '#666',
-                    fontSize: 14,
-                    marginTop: 20
-                }}>
-                    Pertanyaan Anda akan diproses dan dijawab secepatnya
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#e8f5e9", // soft green background
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+          width: "350px",
+          textAlign: "center",
+        }}
+      >
+        <h1 style={{ marginBottom: "20px", color: "#2e7d32" }}>Chatbot AI</h1>
+
+        <input
+          type="text"
+          placeholder="Tulis pertanyaan..."
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            border: "1px solid #171515ff",
+            borderRadius: "8px",
+            marginBottom: "12px",
+            fontSize: "14px",
+            color: "black" // black tex color for better contrast
+          }}
+        />
+
+        <button
+          onClick={sendQuestion}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? "#a5d6a7" : "#4caf50",
+            color: "white",
+            padding: "10px",
+            width: "100%",
+            border: "none",
+            borderRadius: "8px",
+            fontSize: "14px",
+            cursor: loading ? "not-allowed" : "pointer",
+            transition: "background-color 0.3s ease, transform 0.2s ease",
+          }}
+          onMouseOver={(e) => {
+            if (!loading) {
+              e.currentTarget.style.backgroundColor = "#43a047";
+              e.currentTarget.style.transform = "scale(1.03)";
+            }
+          }}
+          onMouseOut={(e) => {
+            if (!loading) {
+              e.currentTarget.style.backgroundColor = "#4caf50";
+              e.currentTarget.style.transform = "scale(1)";
+            }
+          }}
+        >
+          {loading ? (
+            <div
+              style={{
+                border: "3px solid #775454ff",
+                borderTop: "3px solid white",
+                borderRadius: "50%",
+                width: "16px",
+                height: "16px",
+                animation: "spin 0.8s linear infinite",
+                margin: "0 auto",
+              }}
+            />
+          ) : (
+            "Kirim"
+          )}
+        </button>
+
+        {answer && (
+          <div
+            style={{
+              marginTop: "15px",
+              padding: "10px",
+              backgroundColor: "#c8e6c9",
+              borderRadius: "8px",
+              color: "#1b5e20",
+              textAlign: "left",
+              fontSize: "14px",
+              opacity: showAnswer ? 1 : 0,
+              transform: showAnswer ? "translateY(0)" : "translateY(5px)",
+              transition: "opacity 0.4s ease, transform 0.4s ease",
+            }}
+          >
+            {answer}
+          </div>
+        )}
+
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
 }
-
